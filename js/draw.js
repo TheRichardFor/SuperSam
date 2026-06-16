@@ -872,49 +872,111 @@ function drawHeroFigure(cx, cy, scale, capePhase) {
 
 // ── Animated title / start screen ────────────────────────────────────────────
 function drawMenuBackground() {
-  // Sky gradient
+  // 1. Deep space sky
   const bg = ctx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#010015'); bg.addColorStop(0.55,'#08002a'); bg.addColorStop(1,'#180010');
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  bg.addColorStop(0,'#000009'); bg.addColorStop(0.5,'#040018'); bg.addColorStop(1,'#0c000f');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
 
-  // City silhouette
-  ctx.fillStyle = '#05001a';
+  // 2. Aurora curtains — 4 animated bands
+  const aColors=[[40,210,120],[70,140,255],[165,45,235],[30,195,215]];
+  for(let bi=0;bi<4;bi++){
+    const [r,g,b]=aColors[bi];
+    const baseY=H*(0.06+bi*0.055);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(W,0);
+    for(let x=W;x>=0;x-=3){
+      const y=baseY+Math.sin(x*0.009+frameCount*0.011+bi*1.1)*13
+                   +Math.sin(x*0.019+frameCount*0.007+bi*0.7)*5;
+      ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    const ag=ctx.createLinearGradient(0,0,0,baseY+14);
+    ag.addColorStop(0,`rgba(${r},${g},${b},0)`);
+    ag.addColorStop(0.75,`rgba(${r},${g},${b},0.14)`);
+    ag.addColorStop(1,`rgba(${r},${g},${b},0.04)`);
+    ctx.fillStyle=ag; ctx.fill();
+  }
+
+  // 3. Stars
+  for(let i=0;i<150;i++){
+    const sx=(i*97+31)%W, sy=(i*53+17)%(H*0.86);
+    const tw=0.3+Math.sin(frameCount*0.07+i*0.8)*0.4;
+    ctx.globalAlpha=Math.max(0.05,tw);
+    ctx.fillStyle=i%8===0?'#aaccff':i%5===0?'#ffeeaa':'#ffffff';
+    ctx.beginPath(); ctx.arc(sx,sy,i%18===0?2.4:i%6===0?1.5:0.9,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // 4. Moon (upper right)
+  const moonX=W*0.88, moonY=H*0.13;
+  const moonGlow=ctx.createRadialGradient(moonX,moonY,0,moonX,moonY,50);
+  moonGlow.addColorStop(0,'rgba(255,250,220,0.15)'); moonGlow.addColorStop(1,'rgba(255,250,220,0)');
+  ctx.fillStyle=moonGlow; ctx.beginPath(); ctx.arc(moonX,moonY,50,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#f8f0d8'; ctx.beginPath(); ctx.arc(moonX,moonY,18,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  ctx.beginPath(); ctx.arc(moonX-5,moonY-4,4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(moonX+7,moonY+5,3,0,Math.PI*2); ctx.fill();
+
+  // 5. Shooting star (occasional)
+  const sPhase=frameCount%500;
+  if(sPhase<25){
+    const t=sPhase/25;
+    ctx.save(); ctx.globalAlpha=Math.sin(t*Math.PI)*0.9;
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(W*0.8-t*W*0.38, H*0.06-t*H*0.02);
+    ctx.lineTo(W*0.8-t*W*0.38+90, H*0.06-t*H*0.02+22);
+    ctx.stroke(); ctx.restore();
+  }
+
+  // 6. Nebula glow behind hero (right)
+  const nb=ctx.createRadialGradient(W*0.77,H*0.48,0,W*0.77,H*0.48,210);
+  nb.addColorStop(0,'rgba(90,30,160,0.22)'); nb.addColorStop(0.6,'rgba(40,10,80,0.08)'); nb.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=nb; ctx.fillRect(0,0,W,H);
+
+  // 7. City silhouette
+  ctx.fillStyle='#030010';
   ctx.beginPath(); ctx.moveTo(0,H);
-  const blds = [0,130,42,80,88,110,128,55,165,88,198,42,238,72,278,102,300,58,
-                336,80,378,105,408,48,448,76,490,98,528,44,566,82,608,108,
-                648,62,688,86,728,72,778,104,800,130];
+  const blds=[0,130,42,80,88,110,128,55,165,88,198,42,238,72,278,102,300,58,
+              336,80,378,105,408,48,448,76,490,98,528,44,566,82,608,108,
+              648,62,688,86,728,72,778,104,800,130];
   for(let i=0;i<blds.length;i+=4){
     const bx=blds[i],bh=blds[i+1],nx=blds[i+2]||W;
     ctx.lineTo(bx,H-bh); ctx.lineTo(nx-1,H-bh);
   }
   ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
 
-  // Stars
-  for(let i=0;i<120;i++){
-    const sx=(i*97+31)%W, sy=(i*53+17)%(H*0.72);
-    const tw=0.3+Math.sin(frameCount*0.07+i*0.8)*0.4;
-    ctx.globalAlpha=Math.max(0.05,tw);
-    ctx.fillStyle=i%8===0?'#aaccff':i%5===0?'#ffeeaa':'#ffffff';
-    ctx.beginPath(); ctx.arc(sx,sy,i%12===0?2.5:1,0,Math.PI*2); ctx.fill();
+  // 8. Window lights on city buildings
+  for(let i=0;i<50;i++){
+    const wx=8+(i*71)%(W-16);
+    let bh=50;
+    for(let j=0;j<blds.length-4;j+=4){
+      if(wx>=blds[j]&&wx<(blds[j+2]||W)){bh=blds[j+1];break;}
+    }
+    const minWy=H-bh+8, maxWy=H-10;
+    if(minWy>=maxWy) continue;
+    const wy=minWy+(i*43)%(maxWy-minWy);
+    if(Math.sin(frameCount*0.022+i*2.1)>0.15){
+      ctx.globalAlpha=0.45+Math.sin(frameCount*0.04+i)*0.2;
+      ctx.fillStyle=i%5===0?'#ffee99':'#aaddff';
+      ctx.fillRect(wx,wy,3,2);
+    }
   }
   ctx.globalAlpha=1;
 
-  // Light rays behind logo
-  const lx=W*0.64, ly=H*0.26;
+  // 9. Light rays behind S-shield (left-centre)
+  const lx=W*0.34, ly=H*0.24;
   ctx.save(); ctx.translate(lx,ly);
   for(let i=0;i<20;i++){
     const a=(i/20)*Math.PI*2+frameCount*0.004;
-    const al=0.025+Math.sin(frameCount*0.025+i*0.7)*0.012;
-    ctx.fillStyle=`rgba(80,130,255,${al})`;
+    ctx.fillStyle=`rgba(80,130,255,${0.022+Math.sin(frameCount*0.025+i*0.7)*0.011})`;
     ctx.beginPath(); ctx.moveTo(0,0);
-    ctx.lineTo(Math.cos(a-0.09)*720,Math.sin(a-0.09)*720);
-    ctx.lineTo(Math.cos(a+0.09)*720,Math.sin(a+0.09)*720);
+    ctx.lineTo(Math.cos(a-0.09)*700,Math.sin(a-0.09)*700);
+    ctx.lineTo(Math.cos(a+0.09)*700,Math.sin(a+0.09)*700);
     ctx.closePath(); ctx.fill();
   }
   for(let i=0;i<8;i++){
     const a=(i/8)*Math.PI*2+frameCount*0.003+0.3;
-    const al=0.018+Math.sin(frameCount*0.03+i)*0.009;
-    ctx.fillStyle=`rgba(255,200,60,${al})`;
+    ctx.fillStyle=`rgba(255,200,60,${0.015+Math.sin(frameCount*0.03+i)*0.008})`;
     ctx.beginPath(); ctx.moveTo(0,0);
     ctx.lineTo(Math.cos(a-0.06)*600,Math.sin(a-0.06)*600);
     ctx.lineTo(Math.cos(a+0.06)*600,Math.sin(a+0.06)*600);
@@ -922,32 +984,49 @@ function drawMenuBackground() {
   }
   ctx.restore();
 
-  // Hero figure – left side
-  drawHeroFigure(W*0.2, H*0.9, 4.0, frameCount*0.055);
+  // 10. Floating sparkles drifting up (left side)
+  for(let i=0;i<18;i++){
+    const sy=H-((frameCount*0.55+i*60)%H)-20;
+    const sx=14+(i*113)%(W*0.50-28);
+    if(sy<H*0.24) continue;
+    ctx.globalAlpha=0.07+Math.sin(frameCount*0.08+i)*0.06;
+    ctx.fillStyle=i%3===0?'#ffd700':i%3===1?'#66aaff':'#ff6688';
+    ctx.beginPath(); ctx.arc(sx,sy,1.5,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
 
-  // S logo
+  // 11. Hero figure — right side with heroic glow
+  const heroX=W*0.77, heroY=H*0.965;
+  const hg=ctx.createRadialGradient(heroX,heroY-190,0,heroX,heroY-190,160);
+  hg.addColorStop(0,'rgba(100,160,255,0.18)'); hg.addColorStop(0.6,'rgba(60,80,200,0.06)'); hg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=hg; ctx.fillRect(0,0,W,H);
+  drawHeroFigure(heroX, heroY, 4.8, frameCount*0.055);
+
+  // 12. S-Shield (left-centre, pulsing)
   const ls=1+Math.sin(frameCount*0.04)*0.028;
   ctx.save(); ctx.translate(lx,ly); ctx.scale(ls,ls);
-  drawSShield(0,0,54);
+  drawSShield(0,0,66);
   ctx.restore();
 
-  // "SUPER SAM" 3-D text
-  const tx=lx, ty=ly+95;
+  // 13. "SUPER SAM" 3-D title
+  const tx=lx, ty=ly+122;
   ctx.save(); ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.font='bold 62px Arial Black';
-  // depth layers
-  for(let d=5;d>=1;d--){
-    ctx.fillStyle=`hsl(240,85%,${8+d*4}%)`;
+  ctx.font='bold 72px Arial Black, Arial';
+  ctx.shadowBlur=24; ctx.shadowColor='#2244ee';
+  for(let d=6;d>=1;d--){
+    ctx.fillStyle=`hsl(235,85%,${6+d*4}%)`;
     ctx.fillText('SUPER SAM',tx+d,ty+d);
   }
-  const tg=ctx.createLinearGradient(tx-190,ty-58,tx+190,ty);
-  tg.addColorStop(0,'#ffd700'); tg.addColorStop(0.35,'#ffffff');
-  tg.addColorStop(0.7,'#ffe050'); tg.addColorStop(1,'#ffaa00');
+  ctx.shadowBlur=0;
+  const tg=ctx.createLinearGradient(tx-220,ty-68,tx+220,ty);
+  tg.addColorStop(0,'#ffd700'); tg.addColorStop(0.32,'#ffffff');
+  tg.addColorStop(0.65,'#ffe050'); tg.addColorStop(1,'#ffaa00');
   ctx.fillStyle=tg; ctx.fillText('SUPER SAM',tx,ty);
-  ctx.strokeStyle='#880000'; ctx.lineWidth=1.5; ctx.strokeText('SUPER SAM',tx,ty);
-  // Subtitle
-  ctx.fillStyle='#88aaff'; ctx.font='bold 15px Arial Black';
-  ctx.fillText('THE HERO OF KOALALAND',tx,ty+26);
+  ctx.strokeStyle='#880000'; ctx.lineWidth=2; ctx.strokeText('SUPER SAM',tx,ty);
+  ctx.shadowBlur=8; ctx.shadowColor='#4466cc';
+  ctx.fillStyle='#88aaff'; ctx.font='bold 15px Arial Black, Arial';
+  ctx.fillText('THE HERO OF KOALALAND',tx,ty+30);
+  ctx.shadowBlur=0;
   ctx.restore();
 }
 
