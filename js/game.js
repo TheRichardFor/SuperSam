@@ -783,51 +783,81 @@ function showHighscores(hs) {
 function showStartMenu() {
   const ol = document.getElementById('overlay');
   ol.innerHTML = ''; ol.style.display = 'flex';
-  // Canvas draws the background — overlay is transparent
   ol.style.background = 'none';
 
-  // Push buttons down to the lower portion so the canvas art shows above
+  // Canvas art fills the top — push UI to the bottom third
   const spacer = document.createElement('div');
-  spacer.style.cssText = 'flex:1;min-height:0;';
+  spacer.style.cssText = 'flex:1;';
   ol.appendChild(spacer);
 
+  // Frosted panel behind the buttons for readability
+  const panel = document.createElement('div');
+  panel.style.cssText = [
+    'display:flex', 'flex-direction:column', 'align-items:center',
+    'gap:0', 'padding:18px 32px 26px',
+    'background:rgba(4,0,22,0.78)',
+    'border-top:1px solid rgba(255,215,0,0.18)',
+    'backdrop-filter:blur(4px)',
+    'width:100%',
+  ].join(';');
+  ol.appendChild(panel);
+
+  // Top-3 scores (only if scores exist)
   const hs = loadHS();
   if (hs.length > 0) {
-    const ph = document.createElement('p');
-    ph.style.cssText = 'color:#ffd700;font-size:13px;margin-bottom:2px;text-shadow:2px 2px 0 #000;';
-    ph.textContent = '— Top scores —';
-    ol.appendChild(ph);
-    hs.slice(0,3).forEach((e,i) => {
-      const row = document.createElement('div'); row.className = 'hs-preview';
-      row.style.textShadow = '1px 1px 0 #000';
-      row.textContent = `${i+1}. ${e.name}  ${e.score} pts`;
-      ol.appendChild(row);
+    const scoreRow = document.createElement('div');
+    scoreRow.style.cssText = 'display:flex;gap:22px;margin-bottom:10px;';
+    const medals = ['🥇','🥈','🥉'];
+    hs.slice(0, 3).forEach((e, i) => {
+      const chip = document.createElement('span');
+      chip.style.cssText = 'color:#ccc;font-size:12px;font-family:monospace;text-shadow:1px 1px 0 #000;';
+      chip.textContent = `${medals[i]} ${e.name}  ${e.score}`;
+      scoreRow.appendChild(chip);
     });
+    panel.appendChild(scoreRow);
   }
 
-  const p2 = document.createElement('p'); p2.className = 'controls';
-  p2.style.textShadow = '1px 1px 0 #000';
-  p2.textContent = '← → move  ·  ↑ / Space jump  ·  F throw  ·  1-9 level  ·  🎮 D-pad/stick move  A jump  X/B throw  Start play';
-  ol.appendChild(p2);
+  // Controls hint — two short lines
+  const hints = document.createElement('div');
+  hints.style.cssText = 'display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;';
+  [
+    '⌨  ← → move  ·  ↑ / Space jump  ·  F attack',
+    '🎮  D-pad move  ·  A jump  ·  X / B attack',
+  ].forEach(txt => {
+    const h = document.createElement('span');
+    h.style.cssText = 'color:#8888aa;font-size:11px;text-shadow:1px 1px 0 #000;white-space:nowrap;';
+    h.textContent = txt;
+    hints.appendChild(h);
+  });
+  panel.appendChild(hints);
 
+  // Primary: Play button
   const playBtn = document.createElement('button');
   playBtn.className = 'btn'; playBtn.textContent = '▶  Play!';
   playBtn.onclick = () => startGame();
-  ol.appendChild(playBtn);
+  panel.appendChild(playBtn);
+
+  // Secondary row: High Scores + Settings side by side
+  const secondRow = document.createElement('div');
+  secondRow.style.cssText = 'display:flex;gap:12px;margin-top:12px;margin-bottom:0;';
 
   const hsBtn = document.createElement('button');
-  hsBtn.className = 'btn btn-hs'; hsBtn.textContent = '🏆 High Scores';
+  hsBtn.className = 'btn btn-hs';
+  hsBtn.style.cssText = 'margin-top:0;padding:12px 0;width:124px;font-size:15px;box-shadow:0 4px 0 #001188,0 6px 16px #00000099,inset 0 1px 0 #ffffff55;';
+  hsBtn.textContent = '🏆 Scores';
   hsBtn.onclick = () => showHighscores(loadHS());
-  ol.appendChild(hsBtn);
+  secondRow.appendChild(hsBtn);
 
   const cfgBtn = document.createElement('button');
   cfgBtn.className = 'btn';
-  cfgBtn.style.cssText = 'margin-top:10px;margin-bottom:28px;' +
+  cfgBtn.style.cssText = 'margin-top:0;padding:12px 0;width:124px;font-size:15px;' +
     'background:linear-gradient(180deg,#554488 0%,#332266 55%,#221144 100%);' +
-    'box-shadow:0 7px 0 #110022,0 10px 28px #00000099,inset 0 1px 0 #ffffff55;';
+    'box-shadow:0 4px 0 #110022,0 6px 16px #00000099,inset 0 1px 0 #ffffff55;';
   cfgBtn.textContent = '⚙ Settings';
   cfgBtn.onclick = () => showSettings();
-  ol.appendChild(cfgBtn);
+  secondRow.appendChild(cfgBtn);
+
+  panel.appendChild(secondRow);
 }
 
 function showSettings() {
