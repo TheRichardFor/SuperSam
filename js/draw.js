@@ -772,100 +772,264 @@ function drawSShield(cx, cy, size) {
 }
 
 // ── Hero figure (menu pose: hands on hips, cape flowing) ──────────────────────
-// origin at feet-centre; local coords span about ±20x across, -80 up to 0
-function drawHeroFigure(cx, cy, scale, capePhase) {
+// origin at feet-centre; local coords: ±30x wide, -80 to 0 tall
+// flip=true mirrors on x-axis so hero faces left
+function drawHeroFigure(cx, cy, scale, capePhase, flip) {
   ctx.save();
-  ctx.translate(cx, cy); ctx.scale(scale, scale);
-  const cw = Math.sin(capePhase || 0) * 6;
+  ctx.translate(cx, cy);
+  ctx.scale(flip ? -scale : scale, scale);
+  const cw = Math.sin(capePhase || 0) * 7;
 
-  // Cape
-  ctx.fillStyle = '#bb1100';
+  const lg = (x0,y0,x1,y1,c0,c1) => {
+    const g=ctx.createLinearGradient(x0,y0,x1,y1);
+    g.addColorStop(0,c0); g.addColorStop(1,c1); return g;
+  };
+  const rg = (rx,ry,r0,r1,c0,c1) => {
+    const g=ctx.createRadialGradient(rx,ry,r0,rx,ry,r1);
+    g.addColorStop(0,c0); g.addColorStop(1,c1); return g;
+  };
+
+  // ── Cape (drawn behind body) ─────────────────────────────────────────────
+  // Deep shadow silhouette
+  ctx.fillStyle='#4a0400';
   ctx.beginPath();
-  ctx.moveTo(-5,-48); ctx.bezierCurveTo(-20,-30,-26+cw,-8,-22+cw*1.3,14);
-  ctx.lineTo(-16+cw,18); ctx.bezierCurveTo(-10+cw*0.7,8,-6,-16,-4,-40);
+  ctx.moveTo(-4,-49); ctx.bezierCurveTo(-23,-30,-31+cw,-5,-28+cw*1.5,20);
+  ctx.lineTo(-19+cw,26); ctx.bezierCurveTo(-12+cw*0.7,13,-5,-18,-3,-43);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#ee2200';
+  // Main body (red gradient)
+  ctx.fillStyle=lg(-4,-49,-26+cw,18,'#d11900','#881000');
   ctx.beginPath();
-  ctx.moveTo(-5,-46); ctx.bezierCurveTo(-14,-30,-19+cw*0.7,-10,-15+cw,6);
-  ctx.lineTo(-12+cw*0.8,4); ctx.bezierCurveTo(-8+cw*0.5,-10,-5,-30,-4,-42);
+  ctx.moveTo(-4,-48); ctx.bezierCurveTo(-20,-31,-29+cw,-6,-26+cw*1.3,17);
+  ctx.lineTo(-18+cw,22); ctx.bezierCurveTo(-12+cw*0.7,11,-4,-17,-3,-42);
+  ctx.closePath(); ctx.fill();
+  // Bright leading-edge highlight
+  ctx.fillStyle='#ff4422';
+  ctx.beginPath();
+  ctx.moveTo(-5,-46); ctx.bezierCurveTo(-11,-37,-17+cw*0.4,-20,-14+cw,4);
+  ctx.bezierCurveTo(-11+cw*0.5,8,-7,-21,-5,-43);
+  ctx.closePath(); ctx.fill();
+  // Inner lining (dark glimpse)
+  ctx.fillStyle='#3e0900';
+  ctx.beginPath();
+  ctx.moveTo(-18+cw,21); ctx.bezierCurveTo(-12+cw*0.7,11,-4,-17,-3,-42);
+  ctx.lineTo(-4,-44); ctx.bezierCurveTo(-6,-19,-10+cw*0.5,9,-15+cw*0.9,18);
+  ctx.closePath(); ctx.fill();
+  // Glossy sheen
+  ctx.fillStyle='rgba(255,100,70,0.14)';
+  ctx.beginPath();
+  ctx.moveTo(-6,-45); ctx.bezierCurveTo(-9,-39,-12+cw*0.2,-28,-10+cw*0.4,-11);
+  ctx.bezierCurveTo(-9+cw*0.3,-5,-6,-26,-5,-42);
   ctx.closePath(); ctx.fill();
 
-  // Boots
-  ctx.fillStyle = '#bb1100';
-  ctx.beginPath(); ctx.ellipse(-9,0,11,5,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(9,0,11,5,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#ee3300';
-  ctx.beginPath(); ctx.ellipse(-11,-2,6,3,-0.3,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(7,-2,6,3,-0.3,0,Math.PI*2); ctx.fill();
+  // ── Boots ────────────────────────────────────────────────────────────────
+  // Left boot
+  ctx.fillStyle=lg(-20,-5,2,2,'#d61a00','#7a0900');
+  ctx.beginPath(); ctx.ellipse(-9,-1,11.5,5.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,130,90,0.44)'; // toe highlight
+  ctx.beginPath(); ctx.ellipse(-14,-3,6,3,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#280000'; // sole
+  ctx.beginPath(); ctx.ellipse(-9,1.5,11.5,3,0,0,Math.PI); ctx.fill();
+  ctx.fillStyle='rgba(255,80,60,0.22)'; // ankle sheen
+  ctx.beginPath(); ctx.ellipse(-9,-4,7,2.5,0,Math.PI,0); ctx.fill();
 
-  // Legs
-  ctx.fillStyle = '#2255dd'; ctx.fillRect(-16,-22,11,22); ctx.fillRect(5,-22,11,22);
-  ctx.fillStyle = '#4477ff'; ctx.fillRect(-15,-22,3,22); ctx.fillRect(6,-22,3,22);
+  // Right boot
+  ctx.fillStyle=lg(-2,-5,20,2,'#d61a00','#7a0900');
+  ctx.beginPath(); ctx.ellipse(9,-1,11.5,5.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,130,90,0.44)';
+  ctx.beginPath(); ctx.ellipse(4,-3,6,3,-0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#280000';
+  ctx.beginPath(); ctx.ellipse(9,1.5,11.5,3,0,0,Math.PI); ctx.fill();
+  ctx.fillStyle='rgba(255,80,60,0.22)';
+  ctx.beginPath(); ctx.ellipse(9,-4,7,2.5,0,Math.PI,0); ctx.fill();
 
-  // Belt
-  ctx.fillStyle = '#ffd700'; ctx.fillRect(-18,-24,36,5);
-  ctx.fillStyle = '#cc8800'; ctx.fillRect(-6,-26,12,9);
-  ctx.fillStyle = '#ffd700'; ctx.font='bold 7px Arial Black';
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('S',0,-21);
+  // ── Legs ─────────────────────────────────────────────────────────────────
+  // Left leg
+  ctx.fillStyle=lg(-17,-23,-6,-1,'#2a60ee','#0d35b0');
+  ctx.beginPath(); ctx.moveTo(-17,-23); ctx.lineTo(-6,-23); ctx.lineTo(-5,0); ctx.lineTo(-18,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(100,160,255,0.30)'; ctx.fillRect(-16,-22,3,22);
+  ctx.strokeStyle='rgba(0,0,40,0.20)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(-17,-12); ctx.lineTo(-6,-12); ctx.stroke(); // knee crease
 
-  // Body
-  ctx.fillStyle = '#1155ee'; ctx.fillRect(-18,-46,36,24);
-  ctx.fillStyle = '#2266ff';
-  ctx.beginPath(); ctx.ellipse(-8,-36,8,10,-0.1,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(8,-36,8,10,0.1,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#0044cc'; ctx.fillRect(-1,-46,2,24);
+  // Right leg
+  ctx.fillStyle=lg(6,-23,17,-1,'#2a60ee','#0d35b0');
+  ctx.beginPath(); ctx.moveTo(6,-23); ctx.lineTo(17,-23); ctx.lineTo(18,0); ctx.lineTo(5,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(100,160,255,0.30)'; ctx.fillRect(7,-22,3,22);
+  ctx.beginPath(); ctx.moveTo(6,-12); ctx.lineTo(17,-12); ctx.stroke();
 
-  // Chest emblem
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath(); ctx.moveTo(0,-46); ctx.lineTo(11,-38); ctx.lineTo(0,-29); ctx.lineTo(-11,-38); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#cc0000'; ctx.font='bold 12px Arial Black';
-  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('S',0,-37);
+  // ── Belt ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-19,-27,19,-19,'#ffe050','#b87800');
+  ctx.fillRect(-19,-27,38,8);
+  // Buckle
+  ctx.fillStyle=lg(-9,-28,9,-18,'#ffe870','#cc8800');
+  ctx.beginPath(); ctx.moveTo(-9,-27); ctx.lineTo(9,-27); ctx.lineTo(8,-18); ctx.lineTo(-8,-18); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,215,0,0.7)'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.fillStyle='#ffd700'; ctx.font='bold 7px Arial Black';
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('S',0,-22.5);
 
-  // Arms – hands on hips
-  ctx.fillStyle = '#1155ee'; ctx.fillRect(-30,-44,12,22); ctx.fillRect(18,-44,12,22);
-  ctx.fillStyle = '#4477ff'; ctx.fillRect(-29,-44,3,22); ctx.fillRect(19,-44,3,22);
-  ctx.fillStyle = '#bb1100';
-  ctx.beginPath(); ctx.ellipse(-25,-20,8,7,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(25,-20,8,7,0,0,Math.PI*2); ctx.fill();
+  // ── Torso ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-19,-48,19,-22,'#2a68ff','#0c38c0');
+  ctx.fillRect(-19,-48,38,26);
+  // Top lighting
+  ctx.fillStyle=lg(-19,-48,0,-40,'rgba(90,165,255,0.40)','rgba(90,165,255,0)');
+  ctx.fillRect(-19,-48,38,10);
+  // Pectoral highlights
+  ctx.fillStyle=rg(-8,-37,0,10,'rgba(80,155,255,0.50)','rgba(80,155,255,0)');
+  ctx.beginPath(); ctx.ellipse(-8,-37,9,11,-0.1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=rg(8,-37,0,10,'rgba(80,155,255,0.38)','rgba(80,155,255,0)');
+  ctx.beginPath(); ctx.ellipse(8,-37,9,11,0.1,0,Math.PI*2); ctx.fill();
+  // Right-side shadow
+  ctx.fillStyle='rgba(0,0,30,0.22)'; ctx.fillRect(12,-48,7,26);
+  // Centre seam
+  ctx.strokeStyle='rgba(0,30,130,0.55)'; ctx.lineWidth=0.9;
+  ctx.beginPath(); ctx.moveTo(0,-48); ctx.lineTo(0,-22); ctx.stroke();
 
-  // Collar
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath(); ctx.moveTo(-13,-46); ctx.lineTo(0,-51); ctx.lineTo(13,-46);
-  ctx.lineTo(10,-41); ctx.lineTo(0,-46); ctx.lineTo(-10,-41); ctx.closePath(); ctx.fill();
+  // Chest emblem (diamond shield)
+  ctx.fillStyle=lg(-11,-47,11,-28,'#ffe566','#c88800');
+  ctx.beginPath(); ctx.moveTo(0,-48); ctx.lineTo(11,-40); ctx.lineTo(7,-28); ctx.lineTo(0,-31); ctx.lineTo(-7,-28); ctx.lineTo(-11,-40); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,210,0,0.65)'; ctx.lineWidth=0.6; ctx.stroke();
+  ctx.fillStyle='#cc0000'; ctx.shadowBlur=3; ctx.shadowColor='#ff3300';
+  ctx.font='bold 12px Arial Black'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('S',0,-39); ctx.shadowBlur=0;
 
-  // Neck
-  ctx.fillStyle = '#ffcc88'; ctx.fillRect(-6,-52,12,8);
+  // ── Arms ─────────────────────────────────────────────────────────────────
+  // Left arm
+  ctx.fillStyle=lg(-30,-45,-18,-22,'#2a68ff','#0c38c0');
+  ctx.fillRect(-30,-45,12,23);
+  ctx.fillStyle='rgba(90,155,255,0.30)'; ctx.fillRect(-29,-44,3,22);
+  ctx.fillStyle=rg(-24,-45,0,9,'rgba(130,190,255,0.55)','rgba(130,190,255,0)');
+  ctx.beginPath(); ctx.ellipse(-24,-43,8,7,0,0,Math.PI*2); ctx.fill();
 
-  // Head
-  ctx.fillStyle = '#ffcc88'; ctx.beginPath(); ctx.ellipse(0,-62,17,14,0,0,Math.PI*2); ctx.fill();
+  // Right arm
+  ctx.fillStyle=lg(18,-45,30,-22,'#2a68ff','#0c38c0');
+  ctx.fillRect(18,-45,12,23);
+  ctx.fillStyle='rgba(90,155,255,0.30)'; ctx.fillRect(19,-44,3,22);
+  ctx.fillStyle=rg(24,-45,0,9,'rgba(130,190,255,0.55)','rgba(130,190,255,0)');
+  ctx.beginPath(); ctx.ellipse(24,-43,8,7,0,0,Math.PI*2); ctx.fill();
 
-  // Hair
-  ctx.fillStyle = '#332200'; ctx.beginPath(); ctx.ellipse(0,-73,16,7,0,0,Math.PI*2); ctx.fill();
-  ctx.fillRect(-14,-77,28,7);
-  ctx.fillStyle = '#553300';
-  ctx.beginPath(); ctx.ellipse(-6,-74,7,4,-0.3,0,Math.PI*2); ctx.fill();
+  // ── Gloves ───────────────────────────────────────────────────────────────
+  const drawGlove = (gx) => {
+    ctx.fillStyle=lg(gx-9,-27,gx+9,-13,'#d61a00','#8a0c00');
+    ctx.beginPath(); ctx.ellipse(gx,-21,9.5,7.5,-0.1,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,130,90,0.42)';
+    ctx.beginPath(); ctx.ellipse(gx-3,-24.5,5.5,3,-0.3,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(80,0,0,0.36)'; ctx.lineWidth=0.9;
+    ctx.beginPath(); ctx.moveTo(gx-8.5,-21); ctx.lineTo(gx+8.5,-21); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx-7,-17); ctx.lineTo(gx+7,-17); ctx.stroke();
+  };
+  drawGlove(-25); drawGlove(25);
 
-  // Mask
-  ctx.fillStyle = '#1155ee';
-  ctx.beginPath(); ctx.ellipse(-8,-63,8,5,0,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(8,-63,8,5,0,0,Math.PI*2); ctx.fill();
-  ctx.fillRect(-5,-67,10,6);
+  // ── Collar ───────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-14,-47,14,-40,'#ffe566','#c88800');
+  ctx.beginPath(); ctx.moveTo(-14,-47); ctx.lineTo(0,-54); ctx.lineTo(14,-47); ctx.lineTo(11,-41); ctx.lineTo(0,-46); ctx.lineTo(-11,-41); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,220,0,0.6)'; ctx.lineWidth=0.6;
+  ctx.beginPath(); ctx.moveTo(-14,-47); ctx.lineTo(0,-54); ctx.lineTo(14,-47); ctx.stroke();
 
-  // Eyes
-  ctx.fillStyle = '#fff';
+  // ── Neck ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-6,-53,6,-45,'#ffd090','#dfa060');
+  ctx.fillRect(-6,-53,12,8);
+  ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.fillRect(-6,-53,3,8); ctx.fillRect(3,-53,3,8);
+
+  // ── Head ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-17,-77,17,-52,'#ffd090','#dfa060');
+  ctx.beginPath(); ctx.ellipse(0,-62,17.5,14.5,0,0,Math.PI*2); ctx.fill();
+  // Forehead highlight (light from upper-left)
+  ctx.fillStyle=rg(-5,-72,0,12,'rgba(255,240,200,0.60)','rgba(255,240,200,0)');
+  ctx.beginPath(); ctx.ellipse(-4,-70,11,8,0,0,Math.PI*2); ctx.fill();
+  // Cheek warmth
+  ctx.fillStyle='rgba(255,150,100,0.24)';
+  ctx.beginPath(); ctx.ellipse(-11,-61,5.5,4,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(11,-61,5.5,4,0,0,Math.PI*2); ctx.fill();
+  // Jaw shadow
+  ctx.fillStyle='rgba(0,0,0,0.09)';
+  ctx.beginPath(); ctx.ellipse(0,-55.5,13,5,0,0.3,Math.PI-0.3); ctx.fill();
+
+  // ── Hair ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle='#1e1400';
+  ctx.beginPath(); ctx.ellipse(0,-74,16.5,7.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillRect(-15.5,-79,31,8);
+  // Volume / tonal layers
+  ctx.fillStyle='#3d2c10';
+  ctx.beginPath(); ctx.ellipse(-4,-75,8.5,4.5,-0.25,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(5,-76,5.5,3,-0.1,0,Math.PI*2); ctx.fill();
+  // Shine streak
+  ctx.fillStyle='rgba(145,105,35,0.50)';
+  ctx.beginPath(); ctx.ellipse(-2,-77,4.5,2,-0.3,0,Math.PI*2); ctx.fill();
+  // Sideburns
+  ctx.fillStyle='#2a1c08';
+  ctx.beginPath(); ctx.ellipse(-16.5,-64,2.5,6,0.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(16.5,-64,2.5,6,-0.2,0,Math.PI*2); ctx.fill();
+
+  // ── Mask ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle=lg(-18,-69,18,-57,'#2a68ff','#0c38c0');
+  ctx.beginPath(); ctx.ellipse(-8,-63,8.5,5.5,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(8,-63,8.5,5.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillRect(-5,-68,10,5);
+  ctx.fillStyle='rgba(0,20,100,0.44)'; ctx.fillRect(-5.5,-69,11,3); // brow ridge
+  // Mask glint on top arc
+  ctx.strokeStyle='rgba(110,175,255,0.42)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.arc(-8,-63,8.5,Math.PI,0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(8,-63,8.5,Math.PI,0); ctx.stroke();
+
+  // ── Eyes ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle='#f9f9f9'; // sclera
   ctx.beginPath(); ctx.ellipse(-8,-63,5.5,3.5,0,0,Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(8,-63,5.5,3.5,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#223399';
-  ctx.beginPath(); ctx.arc(-7,-63,3,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(9,-63,3,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(-5,-65,1.2,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(11,-65,1.2,0,Math.PI*2); ctx.fill();
+  // Iris gradient
+  ctx.fillStyle=rg(-7.5,-63.5,0,3.2,'#8ab4ff','#1a3388');
+  ctx.beginPath(); ctx.arc(-8,-63,3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=rg(8.5,-63.5,0,3.2,'#8ab4ff','#1a3388');
+  ctx.beginPath(); ctx.arc(8,-63,3,0,Math.PI*2); ctx.fill();
+  // Pupil
+  ctx.fillStyle='#06061a';
+  ctx.beginPath(); ctx.arc(-7.5,-63,1.8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8.5,-63,1.8,0,Math.PI*2); ctx.fill();
+  // Primary catchlight
+  ctx.fillStyle='#ffffff';
+  ctx.beginPath(); ctx.arc(-5.5,-65.5,1.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(10.5,-65.5,1.2,0,Math.PI*2); ctx.fill();
+  // Secondary catchlight
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.beginPath(); ctx.arc(-8,-61.5,0.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8,-61.5,0.6,0,Math.PI*2); ctx.fill();
+  // Upper eyelid line
+  ctx.strokeStyle='rgba(10,10,50,0.72)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.arc(-8,-63,5.5,Math.PI+0.15,-0.15); ctx.stroke();
+  ctx.beginPath(); ctx.arc(8,-63,5.5,Math.PI+0.15,-0.15); ctx.stroke();
+  // Lower eyelid (softer)
+  ctx.strokeStyle='rgba(10,10,50,0.26)'; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.arc(-8,-63,5.5,0.15,Math.PI-0.15); ctx.stroke();
+  ctx.beginPath(); ctx.arc(8,-63,5.5,0.15,Math.PI-0.15); ctx.stroke();
 
-  // Nose + smile
-  ctx.fillStyle = '#d8a068'; ctx.beginPath(); ctx.ellipse(3,-57,2.5,2,0,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#cc5520'; ctx.lineWidth=2.2; ctx.lineCap='round';
-  ctx.beginPath(); ctx.arc(0,-56,6,0.2,Math.PI-0.2); ctx.stroke();
+  // ── Eyebrows (heroic / determined inward angle) ───────────────────────────
+  ctx.strokeStyle='#241800'; ctx.lineWidth=2.6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-14,-69); ctx.quadraticCurveTo(-8,-72,-3,-70); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3,-70); ctx.quadraticCurveTo(8,-72,14,-69); ctx.stroke();
+  ctx.strokeStyle='rgba(90,60,10,0.33)'; ctx.lineWidth=1.1;
+  ctx.beginPath(); ctx.moveTo(-14,-68.5); ctx.quadraticCurveTo(-8,-71,-3,-69.5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3,-69.5); ctx.quadraticCurveTo(8,-71,14,-68.5); ctx.stroke();
+
+  // ── Nose ─────────────────────────────────────────────────────────────────
+  ctx.fillStyle='rgba(0,0,0,0.11)';
+  ctx.beginPath(); ctx.ellipse(3,-58,3.2,2.5,0.2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#dfa060';
+  ctx.beginPath(); ctx.ellipse(2.5,-57.5,2.5,2.2,-0.1,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(100,40,20,0.28)'; // nostrils
+  ctx.beginPath(); ctx.arc(0.5,-58.5,1.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4.5,-58.5,1.2,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.08)'; ctx.lineWidth=1.5; // nose bridge
+  ctx.beginPath(); ctx.moveTo(2,-67); ctx.lineTo(3,-59); ctx.stroke();
+
+  // ── Mouth ────────────────────────────────────────────────────────────────
+  ctx.strokeStyle='#a04818'; ctx.lineWidth=2.3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(0,-55,6.5,0.28,Math.PI-0.28); ctx.stroke();
+  ctx.strokeStyle='rgba(180,80,30,0.50)'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.arc(0,-55,6.5,0.10,Math.PI-0.10); ctx.stroke();
+  // Teeth glimpse
+  ctx.fillStyle='rgba(255,255,255,0.58)';
+  ctx.beginPath(); ctx.arc(0,-55,4.5,0.38,Math.PI-0.38); ctx.fill();
+  // Philtrum
+  ctx.fillStyle='rgba(0,0,0,0.07)';
+  ctx.beginPath(); ctx.ellipse(0,-56,1.5,1.5,0,0,Math.PI*2); ctx.fill();
 
   ctx.restore();
 }
@@ -1000,7 +1164,7 @@ function drawMenuBackground() {
   const hg=ctx.createRadialGradient(heroX,heroY-190,0,heroX,heroY-190,160);
   hg.addColorStop(0,'rgba(100,160,255,0.18)'); hg.addColorStop(0.6,'rgba(60,80,200,0.06)'); hg.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=hg; ctx.fillRect(0,0,W,H);
-  drawHeroFigure(heroX, heroY, 4.8, frameCount*0.055);
+  drawHeroFigure(heroX, heroY, 4.8, frameCount*0.055, true);
 
   // 12. S-Shield (left-centre, pulsing)
   const ls=1+Math.sin(frameCount*0.04)*0.028;
